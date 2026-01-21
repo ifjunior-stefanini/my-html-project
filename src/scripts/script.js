@@ -3,11 +3,16 @@
 let lancamentos = [];
 let lancamentoSelecionado = null;
 let modal = null;
+let extornoModal = null;
+let importacaoModal = null;
+let dadosImportacao = null;
 
 // Inicializar dados do localStorage
 function inicializarBancoDados() {
     carregarLancamentosJSON();
     inicializarModal();
+    inicializarExtornoModal();
+    inicializarImportacaoModal();
     definirDataAtual();
 }
 
@@ -36,6 +41,14 @@ function salvarBancoDados() {
 
 function inicializarModal() {
     modal = new bootstrap.Modal(document.getElementById('lancamentoModal'));
+}
+
+function inicializarExtornoModal() {
+    extornoModal = new bootstrap.Modal(document.getElementById('extornoModal'));
+}
+
+function inicializarImportacaoModal() {
+    importacaoModal = new bootstrap.Modal(document.getElementById('importacaoModal'));
 }
 
 function definirDataAtual() {
@@ -178,7 +191,7 @@ function atualizarBotaoExtorno() {
     btnExtornar.disabled = !temSelecionado;
 }
 
-function extornarLancamento() {
+function abrirModalExtorno() {
     const selecionados = lancamentos.filter(l => l.selecionado);
     
     if (selecionados.length === 0) {
@@ -186,10 +199,37 @@ function extornarLancamento() {
         return;
     }
 
-    if (!confirm(`Tem certeza que deseja extornar ${selecionados.length} lançamento(s)?`)) {
-        return;
-    }
+    // Montar lista de lançamentos a serem extornados
+    const listaHTML = selecionados.map(lancamento => {
+        const dataFormatada = new Date(lancamento.data).toLocaleDateString('pt-BR');
+        const valorFormatado = lancamento.valor.toFixed(2).replace('.', ',');
+        const movimentoTexto = lancamento.movimento === 'entrada' ? 'Entrada' : 'Saída';
+        
+        return `
+            <div class="card mb-2">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Data:</strong> ${dataFormatada}</p>
+                            <p class="mb-1"><strong>Movimento:</strong> ${movimentoTexto}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Histórico:</strong> ${lancamento.historico}</p>
+                            <p class="mb-1"><strong>Valor:</strong> R$ ${valorFormatado}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
 
+    document.getElementById('listaExtorno').innerHTML = listaHTML;
+    extornoModal.show();
+}
+
+function confirmarExtorno() {
+    const selecionados = lancamentos.filter(l => l.selecionado);
+    
     selecionados.forEach(lancamento => {
         const novoMovimento = lancamento.movimento === 'entrada' ? 'saida' : 'entrada';
         const lancamentoExtorno = {
@@ -211,6 +251,80 @@ function extornarLancamento() {
     calcularSaldos();
     renderizarTabela();
     atualizarBotaoExtorno();
+    
+    // Fechar modal de extorno
+    extornoModal.hide();
+    
+    // Resetar checkbox "Selecionar Todos"
+    document.getElementById('selectAll').checked = false;
+}
+
+function exportarDados() {
+    const dados = {
+        exportadoEm: new Date().toISOString(),
+        lancamentos: lancamentos
+    };
+    
+    const dataStr = JSON.stringify(dados, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `lancamentos_backup_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    alert('Dados exportados com sucesso!');
+}
+
+function importarDados(event) {
+    const file = event.target.files[0];
+    
+    if (!file) return;
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            const conteudo = JSON.parse(e.target.result);
+            
+            if (!conteudo.lancamentos || !Array.isArray(conteudo.lancamentos)) {
+                alert('Arquivo inválido! O arquivo deve conter um array de lançamentos.');
+                return;
+            }
+            
+            dadosImportacao = conteudo.lancamentos;
+            document.getElementById('quantidadeLancamentos').textContent = dadosImportacao.length;
+            importacaoModal.show();
+            
+        } catch (error) {
+            alert('Erro ao processar o arquivo: ' + error.message);
+        }
+    };
+    
+    reader.readAsText(file);
+    
+    // Resetar o input para permitir selecionar o mesmo arquivo novamente
+    event.target.value = '';
+}
+
+function confirmarImportacao() {
+    if (dadosImportacao && Array.isArray(dadosImportacao)) {
+        lancamentos = dadosImportacao;
+        salvarBancoDados();
+        calcularSaldos();
+        renderizarTabela();
+        
+        // Resetar checkboxes
+        document.getElementById('selectAll').checked = false;
+        atualizarBotaoExtorno();
+        
+        importacaoModal.hide();
+        alert('Dados importados com sucesso!');
+    }
 }
 
 function limparFormulario() {

@@ -12,15 +12,26 @@
         <h1 class="mb-4">Conta Corrente Financeira</h1>
         
         <div class="row mb-4">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#lancamentoModal">
                     + Adicionar Lançamento
                 </button>
             </div>
-            <div class="col-md-6 text-end">
-                <button class="btn btn-danger" id="btnExtornar" onclick="extornarLancamento()" disabled>
+            <div class="col-md-4 text-center">
+                <button class="btn btn-danger" id="btnExtornar" onclick="abrirModalExtorno()" disabled>
                     Extornar Lançamento
                 </button>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-success" onclick="exportarDados()" title="Exportar dados">
+                        ⬇️ Exportar
+                    </button>
+                    <button type="button" class="btn btn-info" onclick="document.getElementById('inputImportar').click()" title="Importar dados">
+                        ⬆️ Importar
+                    </button>
+                    <input type="file" id="inputImportar" accept=".json" style="display: none;" onchange="importarDados(event)">
+                </div>
             </div>
         </div>
 
@@ -94,6 +105,46 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary" onclick="adicionarLancamento()">Adicionar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para confirmar extorno -->
+    <div class="modal fade" id="extornoModal" tabindex="-1" aria-labelledby="extornoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="extornoModalLabel">Confirmar Extorno</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Você está prestes a extornar o(s) seguinte(s) lançamento(s):</p>
+                    <div id="listaExtorno"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmarExtorno()">Extornar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para confirmar importação -->
+    <div class="modal fade" id="importacaoModal" tabindex="-1" aria-labelledby="importacaoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info">
+                    <h5 class="modal-title" id="importacaoModalLabel">Confirmar Importação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Você está prestes a importar <strong id="quantidadeLancamentos">0</strong> lançamento(s).</p>
+                    <p class="text-warning"><strong>⚠️ Aviso:</strong> Os dados existentes serão substituídos.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-info" onclick="confirmarImportacao()">Importar</button>
                 </div>
             </div>
         </div>
