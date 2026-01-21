@@ -56,7 +56,8 @@ function adicionarLancamento() {
     const data = document.getElementById('data').value;
     const movimento = document.getElementById('movimento').value;
     const historico = document.getElementById('historico').value;
-    const valor = parseFloat(document.getElementById('valor').value);
+    const valorInput = document.getElementById('valor').value;
+    const valor = parseFloat(valorInput.replace(',', '.'));
     const mensagemErro = document.getElementById('mensagemErro');
 
     // Validar se o valor é diferente de zero
@@ -139,8 +140,8 @@ function renderizarTabela() {
                 <td>${dataFormatada}</td>
                 <td><span class="${movimentoClasse}">${movimentoTexto}</span></td>
                 <td>${lancamento.historico}</td>
-                <td>R$ ${valorFormatado}</td>
-                <td><strong class="${saldoClasse}">R$ ${saldoFormatado}</strong></td>
+                <td class="text-right">R$ ${valorFormatado}</td>
+                <td class="text-right"><strong class="${saldoClasse}">R$ ${saldoFormatado}</strong></td>
             </tr>
         `;
     }).join('');
@@ -222,4 +223,16 @@ function limparFormulario() {
 // Inicializar aplicação quando a página carrega
 document.addEventListener('DOMContentLoaded', function() {
     inicializarBancoDados();
+    
+    // Adicionar máscara de digitação no campo de valor
+    const inputValor = document.getElementById('valor');
+    inputValor.addEventListener('input', function(e) {
+        let valor = e.target.value.replace(/\D/g, '');
+        
+        if (valor.length > 0) {
+            valor = (parseInt(valor) / 100).toFixed(2);
+            valor = valor.replace('.', ',');
+            e.target.value = valor;
+        }
+    });
 });
