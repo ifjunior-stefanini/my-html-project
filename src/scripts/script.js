@@ -2,70 +2,27 @@
 
 let lancamentos = [];
 let lancamentoSelecionado = null;
-let db = null;
 let modal = null;
 
-// Inicializar SQLite
-async function inicializarBancoDados() {
-    const SQL = await initSqlJs();
-    
-    // Tentar carregar banco de dados do localStorage
-    const dbData = localStorage.getItem('lancamentosDB');
-    
-    if (dbData) {
-        // Banco de dados existe, carregar do localStorage
-        const binary = new Uint8Array(dbData.split(',').map(x => parseInt(x)));
-        db = new SQL.Database(binary);
-    } else {
-        // Criar novo banco de dados
-        db = new SQL.Database();
-        criarTabelaLancamentos();
-    }
-    
-    carregarLancamentosDB();
+// Inicializar dados do localStorage
+function inicializarBancoDados() {
+    carregarLancamentosJSON();
+    inicializarModal();
+    definirDataAtual();
 }
 
-function criarTabelaLancamentos() {
-    const sql = `
-        CREATE TABLE IF NOT EXISTS lancamentos (
-            id INTEGER PRIMARY KEY,
-            data TEXT NOT NULL,
-            movimento TEXT NOT NULL,
-            historico TEXT NOT NULL,
-            valor REAL NOT NULL,
-            selecionado INTEGER DEFAULT 0
-        )
-    `;
-    db.run(sql);
-    salvarBancoDados();
-}
-
-function carregarLancamentosDB() {
+function carregarLancamentosJSON() {
     try {
-        const sql = 'SELECT * FROM lancamentos ORDER BY data ASC';
-        const result = db.exec(sql);
+        const jsonData = localStorage.getItem('lancamentosDB');
         
-        lancamentos = [];
-        
-        if (result.length > 0) {
-            const rows = result[0].values;
-            rows.forEach(row => {
-                lancamentos.push({
-                    id: row[0],
-                    data: row[1],
-                    movimento: row[2],
-                    historico: row[3],
-                    valor: row[4],
-                    saldo: 0,
-                    selecionado: row[5] === 1
-                });
-            });
+        if (jsonData) {
+            lancamentos = JSON.parse(jsonData);
+        } else {
+            lancamentos = [];
         }
         
         calcularSaldos();
         renderizarTabela();
-        inicializarModal();
-        definirDataAtual();
     } catch (error) {
         console.error('Erro ao carregar lançamentos:', error);
         lancamentos = [];
@@ -74,32 +31,7 @@ function carregarLancamentosDB() {
 }
 
 function salvarBancoDados() {
-    const data = db.export();
-    const arr = Array.from(data);
-    localStorage.setItem('lancamentosDB', arr.join(','));
-}
-
-function inserirLancamentoDB(lancamento) {
-    const sql = `
-        INSERT INTO lancamentos (id, data, movimento, historico, valor, selecionado)
-        VALUES (?, ?, ?, ?, ?, ?)
-    `;
-    db.run(sql, [lancamento.id, lancamento.data, lancamento.movimento, lancamento.historico, lancamento.valor, lancamento.selecionado ? 1 : 0]);
-    salvarBancoDados();
-}
-
-function atualizarSelecionadoDB() {
-    const sql = 'UPDATE lancamentos SET selecionado = ? WHERE id = ?';
-    lancamentos.forEach(lancamento => {
-        db.run(sql, [lancamento.selecionado ? 1 : 0, lancamento.id]);
-    });
-    salvarBancoDados();
-}
-
-function deletarLancamentoDB(id) {
-    const sql = 'DELETE FROM lancamentos WHERE id = ?';
-    db.run(sql, [id]);
-    salvarBancoDados();
+    localStorage.setItem('lancamentosDB', JSON.stringify(lancamentos));
 }
 
 function inicializarModal() {
@@ -109,6 +41,15 @@ function inicializarModal() {
 function definirDataAtual() {
     const hoje = new Date().toISOString().split('T')[0];
     document.getElementById('data').value = hoje;
+}
+
+// Função para gerar UUID v4
+function gerarUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
 }
 
 function adicionarLancamento() {
@@ -134,7 +75,7 @@ function adicionarLancamento() {
     mensagemErro.classList.add('d-none');
 
     const lancamento = {
-        id: Date.now(),
+        id: gerarUUID(),
         data: data,
         movimento: movimento,
         historico: historico,
@@ -146,7 +87,7 @@ function adicionarLancamento() {
     lancamentos.push(lancamento);
     lancamentos.sort((a, b) => new Date(a.data) - new Date(b.data));
     
-    inserirLancamentoDB(lancamento);
+    salvarBancoDados();
     calcularSaldos();
     renderizarTabela();
     limparFormulario();
@@ -193,7 +134,7 @@ function renderizarTabela() {
         return `
             <tr class="${lancamento.selecionado ? 'row-selected' : ''}">
                 <td>
-                    <input type="checkbox" ${isChecked} onchange="toggleSelecao(${lancamento.id})">
+                    <input type="checkbox" ${isChecked} onchange="toggleSelecao('${lancamento.id}')">
                 </td>
                 <td>${dataFormatada}</td>
                 <td><span class="${movimentoClasse}">${movimentoTexto}</span></td>
@@ -210,7 +151,7 @@ function toggleSelecao(id) {
     if (lancamento) {
         lancamento.selecionado = !lancamento.selecionado;
         lancamentoSelecionado = lancamento.selecionado ? lancamento : null;
-        atualizarSelecionadoDB();
+        salvarBancoDados();
         atualizarBotaoExtorno();
         renderizarTabela();
     }
@@ -225,7 +166,7 @@ function selecionarTodos() {
     });
     
     lancamentoSelecionado = estaChecked && lancamentos.length > 0 ? lancamentos[lancamentos.length - 1] : null;
-    atualizarSelecionadoDB();
+    salvarBancoDados();
     atualizarBotaoExtorno();
     renderizarTabela();
 }
@@ -251,7 +192,7 @@ function extornarLancamento() {
     selecionados.forEach(lancamento => {
         const novoMovimento = lancamento.movimento === 'entrada' ? 'saida' : 'entrada';
         const lancamentoExtorno = {
-            id: Date.now() + Math.random(),
+            id: gerarUUID(),
             data: new Date().toISOString().split('T')[0],
             movimento: novoMovimento,
             historico: `EXTORNO - ${lancamento.historico}`,
@@ -261,12 +202,11 @@ function extornarLancamento() {
         };
 
         lancamentos.push(lancamentoExtorno);
-        inserirLancamentoDB(lancamentoExtorno);
         lancamento.selecionado = false;
     });
 
     lancamentos.sort((a, b) => new Date(a.data) - new Date(b.data));
-    atualizarSelecionadoDB();
+    salvarBancoDados();
     calcularSaldos();
     renderizarTabela();
     atualizarBotaoExtorno();
