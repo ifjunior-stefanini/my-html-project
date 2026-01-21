@@ -14,12 +14,13 @@ header {
 
 h1 {
     margin: 0;
+    color: #35424a;
 }
 
 .container {
-    width: 80%;
+    width: 100%;
+    max-width: 1200px;
     margin: auto;
-    overflow: hidden;
 }
 
 footer {
@@ -30,4 +31,36 @@ footer {
     position: relative;
     bottom: 0;
     width: 100%;
+    margin-top: 40px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f0f0f0;
+    cursor: pointer;
+}
+
+.row-selected {
+    background-color: #e7f3ff !important;
+}
+
+.entrada {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.saida {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.saldo-positivo {
+    color: #28a745;
+}
+
+.saldo-negativo {
+    color: #dc3545;
+}
+
+.card {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
