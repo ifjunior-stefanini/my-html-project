@@ -68,3 +68,119 @@ footer {
 .text-right {
     text-align: right;
 }
+
+/* Estilos dos botões de Exportar e Importar */
+.btn-export {
+    background-color: #ff9800;
+    border-color: #ff9800;
+    color: #ffffff;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-export:hover {
+    background-color: #e68900;
+    border-color: #e68900;
+    color: #ffffff;
+}
+
+.btn-export:active,
+.btn-export:focus {
+    background-color: #cc7700;
+    border-color: #cc7700;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.25rem rgba(255, 152, 0, 0.5);
+}
+
+.btn-import {
+    background-color: #9c27b0;
+    border-color: #9c27b0;
+    color: #ffffff;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-import:hover {
+    background-color: #7b1fa2;
+    border-color: #7b1fa2;
+    color: #ffffff;
+}
+
+.btn-import:active,
+.btn-import:focus {
+    background-color: #6a1b9a;
+    border-color: #6a1b9a;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.25rem rgba(156, 39, 176, 0.5);
+}
+
+/* Estilos para notificações */
+.notificacao-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 400px;
+}
+
+.notificacao {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    font-weight: 500;
+    animation: slideIn 0.4s ease-in-out;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.notificacao.sucesso {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.notificacao.erro {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.notificacao.aviso {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+.notificacao.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
+.notificacao.saindo {
+    animation: slideOut 0.4s ease-in-out forwards;
+}

@@ -259,9 +259,42 @@ function confirmarExtorno() {
     document.getElementById('selectAll').checked = false;
 }
 
+// Função para exibir notificações
+function exibirNotificacao(mensagem, tipo = 'sucesso', duracao = 5000) {
+    const container = document.getElementById('notificacaoContainer');
+    const notificacao = document.createElement('div');
+    notificacao.className = `notificacao ${tipo}`;
+    
+    // Definir ícone baseado no tipo
+    let icone = '✓';
+    if (tipo === 'erro') icone = '✕';
+    if (tipo === 'aviso') icone = '⚠️';
+    if (tipo === 'info') icone = 'ℹ️';
+    
+    notificacao.innerHTML = `<span>${icone}</span><span>${mensagem}</span>`;
+    container.appendChild(notificacao);
+    
+    // Remover notificação após o tempo especificado
+    setTimeout(() => {
+        notificacao.classList.add('saindo');
+        setTimeout(() => {
+            notificacao.remove();
+        }, 400);
+    }, duracao);
+}
+
 function exportarDados() {
+    // Obter informações do navegador
+    const navegador = obterNomeNavegador();
+    
+    // Obter data e hora atual
+    const agora = new Date();
+    const data = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
+    const hora = agora.toLocaleTimeString('pt-BR').replace(/:/g, '-');
+    
     const dados = {
         exportadoEm: new Date().toISOString(),
+        navegador: navegador,
         lancamentos: lancamentos
     };
     
@@ -271,13 +304,34 @@ function exportarDados() {
     
     const link = document.createElement('a');
     link.href = url;
-    link.download = `lancamentos_backup_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.json`;
+    link.download = `lancamentos_${data}_${hora}_${navegador}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
-    alert('Dados exportados com sucesso!');
+    exibirNotificacao('Dados exportados com sucesso!', 'sucesso');
+}
+
+// Função auxiliar para obter o nome do navegador
+function obterNomeNavegador() {
+    const userAgent = navigator.userAgent;
+    
+    if (userAgent.indexOf('Chrome') > -1 && userAgent.indexOf('Edg') === -1) {
+        return 'Chrome';
+    } else if (userAgent.indexOf('Safari') > -1 && userAgent.indexOf('Chrome') === -1) {
+        return 'Safari';
+    } else if (userAgent.indexOf('Firefox') > -1) {
+        return 'Firefox';
+    } else if (userAgent.indexOf('Edg') > -1) {
+        return 'Edge';
+    } else if (userAgent.indexOf('Trident') > -1) {
+        return 'IE';
+    } else if (userAgent.indexOf('Opera') > -1 || userAgent.indexOf('OPR') > -1) {
+        return 'Opera';
+    } else {
+        return 'Desconhecido';
+    }
 }
 
 function importarDados(event) {
@@ -323,7 +377,7 @@ function confirmarImportacao() {
         atualizarBotaoExtorno();
         
         importacaoModal.hide();
-        alert('Dados importados com sucesso!');
+        exibirNotificacao('Dados importados com sucesso!', 'sucesso');
     }
 }
 
