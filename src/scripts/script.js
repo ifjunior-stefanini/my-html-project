@@ -1,0 +1,1 @@
+// Este arquivo contém o código JavaScript do projeto. Você pode adicionar funcionalidades interativas e manipulação do DOM aqui.
